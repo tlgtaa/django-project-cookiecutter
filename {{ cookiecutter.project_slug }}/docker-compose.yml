@@ -12,8 +12,10 @@ services:
       - /proj/bin
     depends_on:
       - {{ cookiecutter.project_slug }}-db
+      {% if cookiecutter.use_celery == 'y' -%}
       - redis
       - rabbitmq
+      {% endif %}
     command: python src/manage.py runserver 0.0.0.0:8000
     ports:
       - '8000:8000'
