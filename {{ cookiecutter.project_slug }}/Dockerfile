@@ -1,0 +1,18 @@
+FROM python:3.10-slim
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+RUN apt-get update && apt-get install -y --no-install-recommends gcc && apt clean && rm -rf /var/cache/apt/*
+RUN pip install --upgrade pip
+COPY requirements/ /tmp/requirements
+
+RUN pip install --no-cache-dir -r /tmp/requirements/prod.txt
+
+RUN useradd -m -d /proj -s /bin/bash app
+COPY . /proj
+WORKDIR /proj
+RUN chown -R app:app /proj/*
+RUN chmod +x /proj/bin/*
+ENV PATH "$PATH:/proj/bin"
+USER app

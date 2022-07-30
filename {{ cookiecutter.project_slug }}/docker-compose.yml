@@ -1,0 +1,73 @@
+version: "3.8"
+
+services:
+  {{ cookiecutter.project_slug }}:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.local
+    env_file:
+      - .env
+    volumes:
+      - .:/proj
+      - /proj/bin
+    depends_on:
+      - {{ cookiecutter.project_slug }}-db
+      - redis
+      - rabbitmq
+    command: python src/manage.py runserver 0.0.0.0:8000
+    ports:
+      - '8000:8000'
+    stdin_open: true
+    tty: true
+
+  {{ cookiecutter.project_slug }}-db:
+    container_name: {{ cookiecutter.project_slug }}_db
+    image: postgres:{{ cookiecutter.postgresql_version }}-alpine
+    ports:
+      - '5407:5432'
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
+
+  {% if cookiecutter.use_celery == 'y' %}
+  celery:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.local
+    working_dir: /proj/src
+    command: celery -A core.celery worker -l info
+    env_file:
+      - .env
+    volumes:
+      - .:/proj
+    depends_on:
+      - {{ cookiecutter.project_slug }}-db
+      - redis
+      - rabbitmq
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.local
+    working_dir: /proj/src
+    command: celery -A core.celery beat -l info
+    env_file:
+      - .env
+    volumes:
+      - .:/proj
+    depends_on:
+      - {{ cookiecutter.project_slug }}-db
+      - redis
+      - rabbitmq
+
+  redis:
+    image: redis:latest
+
+  rabbitmq:
+    image: rabbitmq:alpine
+
+  {% endif %}
+
+networks:
+  default:
+    external:
+      name: {{ cookiecutter.project_slug }}

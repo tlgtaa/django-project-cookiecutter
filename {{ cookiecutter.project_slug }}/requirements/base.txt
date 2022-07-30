@@ -1,0 +1,12 @@
+django
+djangorestframework
+django-split-settings
+django-environ
+structlog
+psycopg2-binary
+djangorestframework-simplejwt
+django-behaviors
+django-phonenumber-field[phonenumbers]
+finnhub-python
+celery
+redis
